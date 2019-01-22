@@ -49,15 +49,19 @@ for x in range(fstart,fstop,step):
 	ser.write(str(int(x/10))+'X') # tune DDS
 	s.send('F ' + str(x) + '\n')	# tune GQRX
 	q = s.recv(30)	# read tuning reply from GQRX
-	time.sleep(0.02)
-	s.send('l\n')	# ask for signal level
-	ans = s.recv(30)	# read signal level
+        sig = []
+        for i in range(5):
+	    time.sleep(0.1)
+	    s.send('l\n')	# ask for signal level
+            a = float(s.recv(30)[:-1])	# read signal level
+            if a<0.0:
+                sig.append(a)
+        rl=max(sig)
 	if len(sys.argv) < 5: # no calibration - raw value
-		print x/10, ans[:-1]
-		rl = float(ans[:-1])
+		print x/10,  "{:.2f}".format(rl)
 		rls.append(rl)
 	else:	# including calibration - subtract the received value and calibration data
-		rl = float(ans[:-1])-dictio[x/10]
+		rl -= dictio[x/10]
 		try:
 			swr = (1+10**(rl/20))/(1-10**(rl/20))
 		except:
